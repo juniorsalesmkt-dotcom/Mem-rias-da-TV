@@ -15,13 +15,18 @@ export function useArticles(options: {
   useEffect(() => {
     let q = query(
       collection(db, 'articles'), 
-      where('status', '==', options.status || 'published'),
-      orderBy('publishedAt', 'desc')
+      where('status', '==', options.status || 'published')
     );
+
+    if (options.categorySlug) {
+      q = query(q, where('categoryId', '==', options.categorySlug));
+    }
 
     if (options.featuredOnly) {
       q = query(q, where('isFeatured', '==', true));
     }
+
+    q = query(q, orderBy('publishedAt', 'desc'));
     
     if (options.limitCount) {
       q = query(q, limit(options.limitCount));
@@ -33,13 +38,7 @@ export function useArticles(options: {
         ...doc.data()
       })) as Article[];
       
-      // Client-side category filtering if needed (or we could use categoryId)
-      let filtered = data;
-      if (options.categorySlug) {
-        // In a real app we'd map category slugs to IDs or store slug in article
-      }
-      
-      setArticles(filtered);
+      setArticles(data);
       setLoading(false);
     }, (error) => {
       console.error("Error fetching articles:", error);

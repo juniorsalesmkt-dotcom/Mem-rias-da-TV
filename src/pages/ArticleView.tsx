@@ -21,27 +21,42 @@ export default function ArticleView() {
   useEffect(() => {
     async function fetchArticle() {
       setLoading(true);
-      const q = query(collection(db, 'articles'), where('slug', '==', slug), limit(1));
-      const snapshot = await getDocs(q);
-      
-      if (!snapshot.empty) {
-        const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Article;
-        setArticle(data);
-        
-        // Increment view count
-        updateDoc(doc(db, 'articles', data.id), {
-          viewCount: increment(1)
-        });
-
-        // Fetch related
-        const relatedQuery = query(
+      try {
+        // Must filter by status to satisfy security rules for non-admins
+        const q = query(
           collection(db, 'articles'), 
-          where('categoryId', '==', data.categoryId),
-          where('slug', '!=', slug),
-          limit(3)
+          where('slug', '==', slug), 
+          where('status', '==', 'published'),
+          limit(1)
         );
-        const relatedSnapshot = await getDocs(relatedQuery);
-        setRelated(relatedSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Article[]);
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+          const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Article;
+          setArticle(data);
+          
+          // Increment view count (this is allowed by rules for visitors)
+          try {
+            await updateDoc(doc(db, 'articles', data.id), {
+              viewCount: increment(1)
+            });
+          } catch (e) {
+            console.error("Failed to increment views:", e);
+          }
+
+          // Fetch related
+          const relatedQuery = query(
+            collection(db, 'articles'), 
+            where('categoryId', '==', data.categoryId),
+            where('status', '==', 'published'), // Always filter for published
+            where('slug', '!=', slug),
+            limit(3)
+          );
+          const relatedSnapshot = await getDocs(relatedQuery);
+          setRelated(relatedSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Article[]);
+        }
+      } catch (err) {
+        console.error("Error fetching article:", err);
       }
       setLoading(false);
     }
@@ -155,7 +170,13 @@ export default function ArticleView() {
 
         {/* Main Content */}
         <div className="lg:col-span-7 py-4">
-           <div className="prose prose-lg prose-indigo max-w-none prose-headings:uppercase prose-headings:tracking-tighter prose-headings:text-[#010f25] prose-p:text-gray-700 prose-p:leading-relaxed">
+           <div className="prose prose-lg md:prose-xl prose-slate max-w-none 
+              prose-headings:uppercase prose-headings:tracking-tighter prose-headings:text-[#010f25] prose-headings:font-black
+              prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-8
+              prose-img:rounded-2xl prose-img:shadow-xl prose-img:mx-auto prose-img:my-12 prose-img:block
+              prose-strong:text-[#010f25] prose-strong:font-black
+              prose-blockquote:border-l-4 prose-blockquote:border-[#D4AF37] prose-blockquote:bg-gray-50 prose-blockquote:py-6 prose-blockquote:px-8 prose-blockquote:rounded-r-2xl prose-blockquote:not-italic prose-blockquote:text-xl prose-blockquote:font-medium
+            ">
              <ReactMarkdown>{article.content}</ReactMarkdown>
            </div>
            

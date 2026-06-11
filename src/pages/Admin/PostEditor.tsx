@@ -128,7 +128,21 @@ export default function PostEditor() {
                    </div>
 
                    <div className="space-y-4 pt-4 border-t border-gray-50">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Conteúdo (Markdown)</label>
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Conteúdo (Markdown)</label>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const url = prompt('Cole a URL da imagem:');
+                            if (url) {
+                              setFormData(prev => ({ ...prev, content: (prev.content || '') + `\n\n![Imagem](${url})\n\n` }));
+                            }
+                          }}
+                          className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest flex items-center gap-1 hover:text-[#010f25] transition-colors"
+                        >
+                          <ImageIcon size={12} /> Inserir Imagem no Texto
+                        </button>
+                      </div>
                       <textarea 
                         value={formData.content}
                         onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
