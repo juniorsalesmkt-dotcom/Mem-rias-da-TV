@@ -13,23 +13,38 @@ import ArticleCard from '../components/common/ArticleCard';
 import { Helmet } from 'react-helmet-async';
 
 const ArticleRenderer = ({ content, blocks }: { content: string, blocks?: ContentBlock[] }) => {
+  // Helper to detect if content was saved with double escaping
+  const prepareHTML = (html: string) => {
+    if (!html) return '';
+    // Unescape HTML entities if they dominate the content (indicating double encoding)
+    if (html.includes('&lt;') && html.includes('&gt;')) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      return doc.documentElement.textContent || html;
+    }
+    return html;
+  };
+
   if (blocks && blocks.length > 0) {
     return (
-      <div className="space-y-12">
+      <div className="space-y-12 overflow-hidden break-words">
         {blocks.map((block) => {
           switch (block.type) {
             case 'paragraph':
               return (
-                <p key={block.id} className="text-xl text-gray-700 leading-relaxed font-normal">
-                  {block.content}
-                </p>
+                <div 
+                  key={block.id} 
+                  className="text-xl text-gray-700 leading-relaxed font-normal mb-8"
+                  dangerouslySetInnerHTML={{ __html: prepareHTML(block.content || '') }}
+                />
               );
             case 'heading':
               const Tag = block.level === 3 ? 'h3' : 'h2';
               return (
-                <Tag key={block.id} className={`font-black text-[#010f25] uppercase tracking-tighter mt-16 mb-8 ${block.level === 3 ? 'text-2xl' : 'text-3xl md:text-4xl'}`}>
-                  {block.content}
-                </Tag>
+                <Tag 
+                  key={block.id} 
+                  className={`font-black text-[#010f25] uppercase tracking-tighter mt-16 mb-8 ${block.level === 3 ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
+                  dangerouslySetInnerHTML={{ __html: prepareHTML(block.content || '') }}
+                />
               );
             case 'image':
               const alignmentClasses = {
@@ -50,7 +65,7 @@ const ArticleRenderer = ({ content, blocks }: { content: string, blocks?: Conten
                 <div key={block.id} className="my-16 aspect-video rounded-3xl overflow-hidden shadow-2xl">
                   <iframe 
                     src={`https://www.youtube.com/embed/${videoId}`}
-                    className="w-full h-full"
+                    className="w-full h-full border-none"
                     allowFullScreen
                     title="YouTube Video"
                   />
@@ -59,13 +74,18 @@ const ArticleRenderer = ({ content, blocks }: { content: string, blocks?: Conten
             case 'quote':
               return (
                 <blockquote key={block.id} className="my-16 border-l-4 border-[#D4AF37] bg-gray-50 py-10 px-12 rounded-r-3xl">
-                  <p className="text-2xl font-bold text-[#010f25] leading-relaxed italic">"{block.content}"</p>
+                  <p 
+                    className="text-2xl font-bold text-[#010f25] leading-relaxed italic"
+                    dangerouslySetInnerHTML={{ __html: prepareHTML(block.content || '') }}
+                  />
                 </blockquote>
               );
             case 'list':
               return (
                 <ul key={block.id} className="my-12 space-y-4 list-disc list-inside text-xl text-gray-700 font-medium">
-                  {block.items?.map((item, idx) => <li key={idx}>{item}</li>)}
+                  {block.items?.map((item, idx) => (
+                    <li key={idx} dangerouslySetInnerHTML={{ __html: prepareHTML(item) }} />
+                  ))}
                 </ul>
               );
             case 'callout':
@@ -73,7 +93,10 @@ const ArticleRenderer = ({ content, blocks }: { content: string, blocks?: Conten
                 <div key={block.id} className="my-16 bg-[#010f25] text-white p-10 rounded-3xl relative overflow-hidden">
                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37] opacity-10 rounded-full -translate-x-12 -translate-y-12"></div>
                    <h4 className="text-[#D4AF37] text-xs font-black uppercase tracking-[0.2em] mb-4">Destaque</h4>
-                   <p className="text-xl md:text-2xl font-bold leading-tight relative z-10">{block.content}</p>
+                   <p 
+                    className="text-xl md:text-2xl font-bold leading-tight relative z-10"
+                    dangerouslySetInnerHTML={{ __html: prepareHTML(block.content || '') }}
+                   />
                 </div>
               );
             case 'divider':
@@ -83,8 +106,8 @@ const ArticleRenderer = ({ content, blocks }: { content: string, blocks?: Conten
                 <div key={block.id} className="my-16 grid grid-cols-1 md:grid-cols-2 gap-4">
                   {block.images?.map((img, idx) => (
                     <figure key={idx} className="space-y-2">
-                      <img src={img.url} className="w-full h-64 object-cover rounded-2xl shadow-lg" alt={img.caption || ''} />
-                      {img.caption && <figcaption className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">{img.caption}</figcaption>}
+                       <img src={img.url} className="w-full h-64 object-cover rounded-2xl shadow-lg" alt={img.caption || ''} />
+                       {img.caption && <figcaption className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">{img.caption}</figcaption>}
                     </figure>
                   ))}
                 </div>
@@ -97,20 +120,22 @@ const ArticleRenderer = ({ content, blocks }: { content: string, blocks?: Conten
     );
   }
 
-  // Legacy Markdown rendering
+  // HTML / Quill Rendering
   return (
-    <div className="prose prose-xl prose-slate max-w-none 
-      prose-headings:uppercase prose-headings:tracking-tighter prose-headings:text-[#010f25] prose-headings:font-black
-      prose-p:text-xl prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-12
-      prose-img:rounded-3xl prose-img:shadow-2xl prose-img:mx-auto prose-img:my-16 prose-img:block
-      prose-strong:text-[#010f25] prose-strong:font-black
-      prose-blockquote:border-l-4 prose-blockquote:border-[#D4AF37] prose-blockquote:bg-gray-50 prose-blockquote:py-10 prose-blockquote:px-12 prose-blockquote:rounded-r-3xl prose-blockquote:not-italic prose-blockquote:text-2xl prose-blockquote:font-bold
-      prose-li:text-xl prose-li:text-gray-700 prose-li:mb-4
-    ">
-      <ReactMarkdown>{content}</ReactMarkdown>
-    </div>
+    <div 
+      className="article-content prose prose-lg md:prose-xl prose-slate max-w-none break-words overflow-x-hidden
+        prose-headings:uppercase prose-headings:tracking-tighter prose-headings:text-[#010f25] prose-headings:font-black
+        prose-p:text-lg md:prose-p:text-xl prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-8
+        prose-img:rounded-3xl prose-img:shadow-2xl prose-img:mx-auto prose-img:my-12 prose-img:block prose-img:max-w-full
+        prose-strong:text-[#010f25] prose-strong:font-black
+        prose-blockquote:border-l-4 prose-blockquote:border-[#D4AF37] prose-blockquote:bg-gray-50 prose-blockquote:py-8 prose-blockquote:px-10 prose-blockquote:rounded-r-3xl prose-blockquote:not-italic prose-blockquote:text-xl md:prose-blockquote:text-2xl prose-blockquote:font-bold
+        prose-li:text-lg md:prose-li:text-xl prose-li:text-gray-700 prose-li:mb-4
+      "
+      dangerouslySetInnerHTML={{ __html: prepareHTML(content) }}
+    />
   );
 };
+
 
 export default function ArticleView() {
   const { slug } = useParams();
