@@ -1,8 +1,24 @@
+export type BlockType = 'paragraph' | 'heading' | 'image' | 'gallery' | 'youtube' | 'quote' | 'list' | 'divider' | 'callout';
+
+export interface ContentBlock {
+  id: string;
+  type: BlockType;
+  content?: string;
+  level?: 2 | 3;
+  url?: string;
+  caption?: string;
+  alt?: string;
+  alignment?: 'left' | 'center' | 'right' | 'full';
+  items?: string[];
+  images?: { url: string; caption?: string }[];
+}
+
 export interface Article {
   id: string;
   title: string;
   slug: string;
-  content: string;
+  content: string; // Markdown fallback
+  blocks?: ContentBlock[]; // Structured content
   excerpt: string;
   featuredImage: string;
   categoryId: string;

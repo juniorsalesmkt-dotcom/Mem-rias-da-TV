@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, updateDoc, increment, collection, query, where, limit, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Article } from '../types';
+import { Article, ContentBlock } from '../types';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -11,6 +11,106 @@ import ReactMarkdown from 'react-markdown';
 import ArticleCard from '../components/common/ArticleCard';
 
 import { Helmet } from 'react-helmet-async';
+
+const ArticleRenderer = ({ content, blocks }: { content: string, blocks?: ContentBlock[] }) => {
+  if (blocks && blocks.length > 0) {
+    return (
+      <div className="space-y-12">
+        {blocks.map((block) => {
+          switch (block.type) {
+            case 'paragraph':
+              return (
+                <p key={block.id} className="text-xl text-gray-700 leading-relaxed font-normal">
+                  {block.content}
+                </p>
+              );
+            case 'heading':
+              const Tag = block.level === 3 ? 'h3' : 'h2';
+              return (
+                <Tag key={block.id} className={`font-black text-[#010f25] uppercase tracking-tighter mt-16 mb-8 ${block.level === 3 ? 'text-2xl' : 'text-3xl md:text-4xl'}`}>
+                  {block.content}
+                </Tag>
+              );
+            case 'image':
+              const alignmentClasses = {
+                left: 'max-w-md mr-auto',
+                center: 'max-w-3xl mx-auto',
+                right: 'max-w-md ml-auto',
+                full: 'w-full'
+              };
+              return (
+                <figure key={block.id} className={`my-16 space-y-4 ${alignmentClasses[block.alignment || 'center']}`}>
+                  <img src={block.url} alt={block.alt} className="w-full h-auto rounded-3xl shadow-2xl object-cover" />
+                  {block.caption && <figcaption className="text-center text-sm text-gray-400 font-medium italic uppercase tracking-widest">{block.caption}</figcaption>}
+                </figure>
+              );
+            case 'youtube':
+              const videoId = block.url?.split('v=')[1] || block.url?.split('/').pop();
+              return (
+                <div key={block.id} className="my-16 aspect-video rounded-3xl overflow-hidden shadow-2xl">
+                  <iframe 
+                    src={`https://www.youtube.com/embed/${videoId}`}
+                    className="w-full h-full"
+                    allowFullScreen
+                    title="YouTube Video"
+                  />
+                </div>
+              );
+            case 'quote':
+              return (
+                <blockquote key={block.id} className="my-16 border-l-4 border-[#D4AF37] bg-gray-50 py-10 px-12 rounded-r-3xl">
+                  <p className="text-2xl font-bold text-[#010f25] leading-relaxed italic">"{block.content}"</p>
+                </blockquote>
+              );
+            case 'list':
+              return (
+                <ul key={block.id} className="my-12 space-y-4 list-disc list-inside text-xl text-gray-700 font-medium">
+                  {block.items?.map((item, idx) => <li key={idx}>{item}</li>)}
+                </ul>
+              );
+            case 'callout':
+              return (
+                <div key={block.id} className="my-16 bg-[#010f25] text-white p-10 rounded-3xl relative overflow-hidden">
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37] opacity-10 rounded-full -translate-x-12 -translate-y-12"></div>
+                   <h4 className="text-[#D4AF37] text-xs font-black uppercase tracking-[0.2em] mb-4">Destaque</h4>
+                   <p className="text-xl md:text-2xl font-bold leading-tight relative z-10">{block.content}</p>
+                </div>
+              );
+            case 'divider':
+              return <hr key={block.id} className="my-20 border-t-2 border-gray-100 w-24 mx-auto" />;
+            case 'gallery':
+              return (
+                <div key={block.id} className="my-16 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {block.images?.map((img, idx) => (
+                    <figure key={idx} className="space-y-2">
+                      <img src={img.url} className="w-full h-64 object-cover rounded-2xl shadow-lg" alt={img.caption || ''} />
+                      {img.caption && <figcaption className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">{img.caption}</figcaption>}
+                    </figure>
+                  ))}
+                </div>
+              );
+            default:
+              return null;
+          }
+        })}
+      </div>
+    );
+  }
+
+  // Legacy Markdown rendering
+  return (
+    <div className="prose prose-xl prose-slate max-w-none 
+      prose-headings:uppercase prose-headings:tracking-tighter prose-headings:text-[#010f25] prose-headings:font-black
+      prose-p:text-xl prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-12
+      prose-img:rounded-3xl prose-img:shadow-2xl prose-img:mx-auto prose-img:my-16 prose-img:block
+      prose-strong:text-[#010f25] prose-strong:font-black
+      prose-blockquote:border-l-4 prose-blockquote:border-[#D4AF37] prose-blockquote:bg-gray-50 prose-blockquote:py-10 prose-blockquote:px-12 prose-blockquote:rounded-r-3xl prose-blockquote:not-italic prose-blockquote:text-2xl prose-blockquote:font-bold
+      prose-li:text-xl prose-li:text-gray-700 prose-li:mb-4
+    ">
+      <ReactMarkdown>{content}</ReactMarkdown>
+    </div>
+  );
+};
 
 export default function ArticleView() {
   const { slug } = useParams();
@@ -169,16 +269,8 @@ export default function ArticleView() {
         </aside>
 
         {/* Main Content */}
-        <div className="lg:col-span-7 py-4">
-           <div className="prose prose-lg md:prose-xl prose-slate max-w-none 
-              prose-headings:uppercase prose-headings:tracking-tighter prose-headings:text-[#010f25] prose-headings:font-black
-              prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-8
-              prose-img:rounded-2xl prose-img:shadow-xl prose-img:mx-auto prose-img:my-12 prose-img:block
-              prose-strong:text-[#010f25] prose-strong:font-black
-              prose-blockquote:border-l-4 prose-blockquote:border-[#D4AF37] prose-blockquote:bg-gray-50 prose-blockquote:py-6 prose-blockquote:px-8 prose-blockquote:rounded-r-2xl prose-blockquote:not-italic prose-blockquote:text-xl prose-blockquote:font-medium
-            ">
-             <ReactMarkdown>{article.content}</ReactMarkdown>
-           </div>
+        <div className="lg:col-span-8 py-4">
+           <ArticleRenderer content={article.content} blocks={article.blocks} />
            
            {/* Tags */}
            <div className="mt-12 py-6 border-t border-gray-100 flex flex-wrap gap-2">
@@ -201,7 +293,7 @@ export default function ArticleView() {
         </div>
 
         {/* Right Sidebar - Related / Trending */}
-        <aside className="lg:col-span-4 py-4 space-y-12">
+        <aside className="lg:col-span-3 py-4 space-y-12">
             {/* Newsletter Side */}
             <div className="bg-[#010f25] text-white p-8 rounded-2xl">
                <Mail size={32} className="text-[#D4AF37] mb-4" />
