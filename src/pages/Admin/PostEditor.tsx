@@ -154,6 +154,7 @@ export default function PostEditor() {
     toolbar: {
       container: [
         [{ 'header': [2, 3, false] }],
+        [{ 'size': ['small', false, 'large', 'huge'] }],
         ['bold', 'italic', 'underline', 'strike', 'blockquote'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
         [{ 'align': [] }],
@@ -168,7 +169,7 @@ export default function PostEditor() {
   }), [imageHandler, linkHandler]);
 
   const formats = useMemo(() => [
-    'header',
+    'header', 'size',
     'bold', 'italic', 'underline', 'strike', 'blockquote',
     'list', 'bullet',
     'align',
@@ -257,16 +258,16 @@ export default function PostEditor() {
                    </div>
 
                   {/* Rich Text Editor */}
-                  <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[600px] flex flex-col pt-4">
+                  <div className="bg-white rounded-3xl border border-gray-100 shadow-sm min-h-[600px] flex flex-col pt-4">
                      <div className="px-8 pb-4 border-b border-gray-50 bg-white flex justify-between items-center">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Conteúdo do Artigo</label>
                         <div className="flex gap-2">
                            <button 
                              type="button"
                              onClick={imageHandler}
-                             className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] hover:bg-[#D4AF37]/10 px-3 py-1 rounded-lg transition-colors flex items-center gap-1"
+                             className="text-[10px] font-black uppercase tracking-widest text-[#010f25] bg-[#D4AF37] hover:bg-[#D4AF37]/80 px-4 py-2 rounded-xl transition-all flex items-center gap-2 active:scale-95"
                            >
-                              <ImageIcon size={12} /> Adicionar Mídia
+                              <ImageIcon size={14} /> Adicionar Mídia
                            </button>
                         </div>
                      </div>
@@ -295,17 +296,23 @@ export default function PostEditor() {
                        border-bottom: 1px solid #f9fafb !important;
                        padding: 1rem 2rem !important;
                        background: white !important;
-                       position: sticky;
-                       top: 0;
-                       z-index: 10;
+                       position: sticky !important;
+                       top: 0 !important;
+                       z-index: 40 !important;
+                       box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05) !important;
                      }
                      .quill-editor-wrapper .ql-editor {
                        min-height: 500px !important;
-                       padding: 3rem 4rem !important;
+                       padding: 3rem 1.5rem !important;
                        line-height: 1.8 !important;
                        color: #374151 !important;
                        max-width: 800px;
                        margin: 0 auto;
+                     }
+                     @media (min-width: 768px) {
+                       .quill-editor-wrapper .ql-editor {
+                         padding: 3rem 4rem !important;
+                       }
                      }
                      .quill-editor-wrapper .ql-editor p {
                        margin-bottom: 1.5rem !important;
@@ -333,10 +340,33 @@ export default function PostEditor() {
                        margin: 2rem auto !important;
                      }
                      .quill-editor-wrapper .ql-editor.ql-blank::before {
-                       left: 4rem !important;
+                       left: 1.5rem !important;
                        font-style: normal !important;
                        color: #e5e7eb !important;
                        font-weight: 700 !important;
+                     }
+                     @media (min-width: 768px) {
+                       .quill-editor-wrapper .ql-editor.ql-blank::before {
+                         left: 4rem !important;
+                       }
+                     }
+                     
+                     /* Custom Size picker for Quill */
+                     .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+                     .ql-snow .ql-picker.ql-size .ql-picker-item::before {
+                       content: 'Normal';
+                     }
+                     .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="small"]::before,
+                     .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="small"]::before {
+                       content: 'Pequena';
+                     }
+                     .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="large"]::before,
+                     .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="large"]::before {
+                       content: 'Média';
+                     }
+                     .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="huge"]::before,
+                       .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="huge"]::before {
+                       content: 'Grande';
                      }
                   `}</style>
                 </div>

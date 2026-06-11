@@ -26,18 +26,38 @@
 
 .prose p {
   @apply leading-relaxed text-gray-700;
-  margin-top: 1.5rem !important;
-  margin-bottom: 1.5rem !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+@media (min-width: 768px) {
+  .prose p {
+    margin-top: 1.75rem !important;
+    margin-bottom: 1.75rem !important;
+  }
 }
 
 .prose h2, .prose h3 {
   @apply text-[#010f25] font-black uppercase tracking-tighter;
-  margin-top: 2.5rem !important;
-  margin-bottom: 1.25rem !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+}
+
+@media (min-width: 768px) {
+  .prose h2, .prose h3 {
+    margin-top: 3rem !important;
+    margin-bottom: 1.5rem !important;
+  }
 }
 
 .prose img {
-  @apply rounded-3xl shadow-xl mx-auto my-12;
+  @apply rounded-3xl shadow-xl mx-auto my-8;
   max-width: 100%;
   height: auto;
+}
+
+@media (min-width: 768px) {
+  .prose img {
+    @apply my-16;
+  }
 }

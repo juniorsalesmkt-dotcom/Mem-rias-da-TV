@@ -123,13 +123,13 @@ const ArticleRenderer = ({ content, blocks }: { content: string, blocks?: Conten
   // HTML / Quill Rendering
   return (
     <div 
-      className="article-content prose prose-lg md:prose-xl prose-slate max-w-none break-words overflow-x-hidden
+      className="article-content prose prose-base md:prose-lg lg:prose-xl prose-slate max-w-none break-words overflow-x-hidden
         prose-headings:uppercase prose-headings:tracking-tighter prose-headings:text-[#010f25] prose-headings:font-black
-        prose-p:text-lg md:prose-p:text-xl prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-8
+        prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-8
         prose-img:rounded-3xl prose-img:shadow-2xl prose-img:mx-auto prose-img:my-12 prose-img:block prose-img:max-w-full
         prose-strong:text-[#010f25] prose-strong:font-black
-        prose-blockquote:border-l-4 prose-blockquote:border-[#D4AF37] prose-blockquote:bg-gray-50 prose-blockquote:py-8 prose-blockquote:px-10 prose-blockquote:rounded-r-3xl prose-blockquote:not-italic prose-blockquote:text-xl md:prose-blockquote:text-2xl prose-blockquote:font-bold
-        prose-li:text-lg md:prose-li:text-xl prose-li:text-gray-700 prose-li:mb-4
+        prose-blockquote:border-l-4 prose-blockquote:border-[#D4AF37] prose-blockquote:bg-gray-50 prose-blockquote:py-8 prose-blockquote:px-10 prose-blockquote:rounded-r-3xl prose-blockquote:not-italic prose-blockquote:font-bold
+        prose-li:text-gray-700 prose-li:mb-4
       "
       dangerouslySetInnerHTML={{ __html: prepareHTML(content) }}
     />
