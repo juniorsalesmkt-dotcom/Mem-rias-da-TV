@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'juniorsales.mkt@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Article Validation
+    function isValidArticle(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.slug is string && data.slug.size() > 0 && data.slug.size() <= 250 &&
+             data.content is string && data.content.size() <= 100000 &&
+             data.status in ['draft', 'published'];
+    }
+
+    // Category Validation
+    function isValidCategory(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 50 &&
+             data.slug is string && data.slug.size() > 0 && data.slug.size() <= 60;
+    }
+
+    // Settings Validation
+    function isValidSetting(data) {
+      return data.siteName is string && data.siteName.size() <= 100;
+    }
+    
+    // Newsletter Validation
+    function isValidSubscriber(data) {
+      return data.email is string && data.email.size() > 5 && data.email.size() <= 200 &&
+             data.email.matches('^[^@]+@[^@]+\\.[^@]+$');
+    }
+
+    // Articles
+    match /articles/{articleId} {
+      allow read: if isAdmin() || (existing().status == 'published');
+      allow create: if isAdmin() && isValidArticle(incoming());
+      allow update: if (isAdmin() && isValidArticle(incoming())) ||
+                    (!isAdmin() && existing().status == 'published' && incoming().diff(existing()).affectedKeys().hasOnly(['viewCount']));
+      allow delete: if isAdmin();
+    }
+
+    // Categories
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() && isValidCategory(incoming());
+    }
+
+    // Settings
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() && isValidSetting(incoming());
+    }
+
+    // Analytics
+    match /analytics/{day} {
+      allow read: if isAdmin();
+      allow write: if true; // Allow client-side incrementing of views (should be more restricted in production)
+    }
+
+    // Admins List (Allow users to read their own record to check admin status, and admins to manage all)
+    match /admins/{userId} {
+      allow read: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Newsletter
+    match /newsletter/{subscriberId} {
+      allow create: if isValidSubscriber(incoming());
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "entities": {
+    "Article": {
+      "title": "Article",
+      "description": "An article published on the portal",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "content": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "featuredImage": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "tags": { "type": "array" },
+        "author": { "type": "string" },
+        "publishedAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["draft", "published"] },
+        "readingTime": { "type": "number" },
+        "viewCount": { "type": "number" },
+        "seo": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "description": { "type": "string" }
+          }
+        },
+        "isFeatured": { "type": "boolean" },
+        "isHero": { "type": "boolean" }
+      },
+      "required": ["title", "slug", "content", "categoryId", "status"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "An article category",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["name", "slug"]
+    },
+    "AppSetting": {
+      "title": "AppSetting",
+      "description": "Global application settings",
+      "type": "object",
+      "properties": {
+        "siteName": { "type": "string" },
+        "siteDescription": { "type": "string" },
+        "adSensePublisherId": { "type": "string" },
+        "adSenseCode": { "type": "string" },
+        "adsEnabled": { "type": "boolean" },
+        "newsletterMailchimpUrl": { "type": "string" }
+      }
+    },
+    "Analytics": {
+      "title": "Analytics",
+      "description": "Traffic statistics for a specific day",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "views": { "type": "number" },
+        "referrers": { "type": "object" }
+      }
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "An administrator whitelisted for access",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" }
+      }
+    },
+    "Newsletter": {
+      "title": "Newsletter",
+      "description": "A newsletter subscriber",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "subscribedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "Collection of articles"
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Collection of categories"
+    },
+    "/settings/{settingId}": {
+      "schema": "AppSetting",
+      "description": "Global configuration documents"
+    },
+    "/analytics/{day}": {
+      "schema": "Analytics",
+      "description": "Daily traffic logs"
+    },
+    "/admins/{userId}": {
+      "schema": "Admin",
+      "description": "Authenticated admins"
+    },
+    "/newsletter/{subscriberId}": {
+      "schema": "Newsletter",
+      "description": "Subscribers list"
+    }
+  }
+}
